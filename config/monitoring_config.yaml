@@ -1,0 +1,151 @@
+monitoring:
+  enabled: true
+  update_interval: 30  # seconds
+  
+metrics:
+  prometheus:
+    enabled: true
+    port: 9090
+    scrape_interval: 15s
+    
+  custom_metrics:
+    - name: fraud_detection_rate
+      type: gauge
+      description: "Current fraud detection rate"
+      
+    - name: prediction_latency
+      type: histogram
+      description: "Prediction latency in milliseconds"
+      buckets: [10, 25, 50, 75, 100, 150, 200, 300, 500, 1000]
+      
+    - name: model_accuracy
+      type: gauge  
+      description: "Current model accuracy"
+      
+    - name: false_positive_rate
+      type: gauge
+      description: "Current false positive rate"
+      
+    - name: transactions_processed
+      type: counter
+      description: "Total transactions processed"
+
+alerts:
+  enabled: true
+  
+  thresholds:
+    high_fraud_rate: 5.0  # percentage
+    high_latency: 150  # milliseconds
+    low_accuracy: 0.85
+    high_false_positive_rate: 0.08
+    high_error_rate: 0.05
+    
+  channels:
+    email:
+      enabled: false
+      smtp_server: smtp.gmail.com
+      smtp_port: 587
+      recipients:
+        - admin@company.com
+        
+    slack:
+      enabled: true
+      webhook_url: ${SLACK_WEBHOOK_URL}
+      channel: "#fraud-detection-alerts"
+      
+    pagerduty:
+      enabled: false
+      integration_key: ${PAGERDUTY_KEY}
+
+dashboards:
+  grafana:
+    enabled: true
+    port: 3000
+    admin_user: admin
+    admin_password: admin123
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus:9090
+      - name: Redis
+        type: redis
+        url: redis:6379
+        
+  streamlit:
+    enabled: true
+    port: 8501
+    title: "Fraud Detection Monitoring"
+    
+logging:
+  level: INFO
+  format: json
+  file: logs/fraud_detection.log
+  max_size: 100MB
+  backup_count: 5
+  
+  structured_logging:
+    enabled: true
+    fields:
+      - timestamp
+      - level
+      - service
+      - transaction_id
+      - user_id
+      - prediction
+      - latency
+      
+data_drift:
+  enabled: true
+  detection_method: jensen_shannon_divergence
+  threshold: 0.15
+  window_size: 1000
+  check_interval: 3600  # seconds
+  
+  reference_dataset:
+    path: data/reference_data.parquet
+    update_frequency: weekly
+    
+model_monitoring:
+  performance_tracking:
+    enabled: true
+    metrics:
+      - accuracy
+      - precision
+      - recall
+      - f1_score
+      - auc_roc
+      - false_positive_rate
+      
+  feature_monitoring:
+    enabled: true
+    track_importance: true
+    track_distribution: true
+    
+  prediction_monitoring:
+    enabled: true
+    sample_rate: 0.1  # 10% of predictions
+    store_explanations: true
+    
+health_checks:
+  enabled: true
+  interval: 30  # seconds
+  
+  services:
+    - name: api
+      url: http://localhost:8000/health
+      timeout: 10
+      
+    - name: redis
+      host: localhost
+      port: 6379
+      timeout: 5
+      
+    - name: kafka
+      brokers: localhost:9092
+      timeout: 10
+      
+    - name: postgres
+      host: localhost
+      port: 5432
+      database: fraud_detection
+      timeout: 10

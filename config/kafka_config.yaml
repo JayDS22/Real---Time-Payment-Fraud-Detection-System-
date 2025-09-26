@@ -1,0 +1,47 @@
+kafka:
+  bootstrap_servers: localhost:9092
+  security_protocol: PLAINTEXT
+  
+topics:
+  transactions:
+    name: transactions
+    partitions: 3
+    replication_factor: 1
+    config:
+      retention.ms: 604800000  # 7 days
+      compression.type: gzip
+      
+  predictions:
+    name: fraud_predictions
+    partitions: 3
+    replication_factor: 1
+    config:
+      retention.ms: 259200000  # 3 days
+      
+  alerts:
+    name: fraud_alerts
+    partitions: 1
+    replication_factor: 1
+
+consumer:
+  group_id: fraud-detection-group
+  auto_offset_reset: latest
+  enable_auto_commit: true
+  auto_commit_interval_ms: 1000
+  session_timeout_ms: 30000
+  max_poll_records: 500
+  fetch_min_bytes: 1
+  fetch_max_wait_ms: 500
+
+producer:
+  acks: 1
+  retries: 3
+  batch_size: 16384
+  linger_ms: 10
+  buffer_memory: 33554432
+  compression_type: gzip
+  max_request_size: 1048576
+  
+schema_registry:
+  enabled: false
+  url: http://localhost:8081

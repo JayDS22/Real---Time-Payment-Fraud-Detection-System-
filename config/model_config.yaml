@@ -1,0 +1,105 @@
+model:
+  version: "1.0"
+  ensemble:
+    enabled: true
+    models:
+      - random_forest
+      - xgboost  
+      - lightgbm
+    weights:
+      random_forest: 0.3
+      xgboost: 0.4
+      lightgbm: 0.3
+    voting_strategy: soft  # soft or hard
+    
+  random_forest:
+    n_estimators: 300
+    max_depth: 15
+    min_samples_split: 5
+    min_samples_leaf: 2
+    max_features: sqrt
+    random_state: 42
+    n_jobs: -1
+    
+  xgboost:
+    objective: binary:logistic
+    eval_metric: auc
+    max_depth: 8
+    learning_rate: 0.1
+    n_estimators: 500
+    min_child_weight: 1
+    gamma: 0
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0
+    reg_lambda: 1
+    random_state: 42
+    n_jobs: -1
+    
+  lightgbm:
+    objective: binary
+    metric: auc
+    boosting_type: gbdt
+    num_leaves: 31
+    learning_rate: 0.1
+    n_estimators: 500
+    min_child_samples: 20
+    min_child_weight: 0.001
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0
+    reg_lambda: 0
+    random_state: 42
+    n_jobs: -1
+    verbosity: -1
+
+training:
+  test_size: 0.2
+  validation_size: 0.1
+  cv_folds: 5
+  random_state: 42
+  
+  class_balance:
+    method: smote  # smote, adasyn, undersampling, oversampling
+    sampling_strategy: auto
+    k_neighbors: 5
+    
+  feature_selection:
+    enabled: true
+    method: recursive_feature_elimination
+    n_features: 50
+    
+  hyperparameter_tuning:
+    enabled: true
+    method: optuna  # optuna, grid_search, random_search
+    n_trials: 100
+    timeout: 3600  # seconds
+    
+performance_thresholds:
+  min_precision: 0.90
+  min_recall: 0.85  
+  min_f1_score: 0.87
+  max_false_positive_rate: 0.05
+  max_latency_ms: 100
+  
+model_storage:
+  path: models/
+  mlflow:
+    tracking_uri: http://localhost:5000
+    experiment_name: fraud_detection
+    registered_model_name: fraud_detection_ensemble
+    
+retraining:
+  enabled: true
+  schedule: "0 2 * * 0"  # Weekly at 2 AM Sunday
+  trigger_conditions:
+    performance_degradation: 0.05
+    data_drift_threshold: 0.15
+    min_new_samples: 10000
+    
+explainability:
+  enabled: true
+  methods:
+    - shap
+    - lime
+  max_features_to_explain: 10
